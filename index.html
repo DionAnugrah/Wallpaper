@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformable Neon Wallpaper</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0a0a1a, #0f0f2a, #141434);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            transition: background 1.2s ease-in-out;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        /* CSS Tambahan */
+        .golden-background {
+            background: linear-gradient(135deg, #17110a, #3b3001) !important;
+            transition: background 0.8s ease-in-out;
+        }
+        
+        .golden-background .element {
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.8) !important;
+            filter: drop-shadow(0 0 5px gold);
+        }
+        
+        .elements-container {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .element {
+            width: 140px;
+            height: 140px;
+            border: 3px solid #00a8ff;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #00a8ff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0, 168, 255, 0.7);
+            background-color: rgba(0, 10, 20, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .element:hover {
+            transform: scale(1.3);
+            box-shadow: 0 0 25px rgba(0, 168, 255, 0.9);
+        }
+        
+        .element.active {
+            border-color: #ffcc00;
+            color: #ffcc00;
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.9);
+        }
+        
+        .element-symbol {
+            font-size: 48px;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .element-name {
+            bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .element-number {
+            font-size: 14px;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+        
+        .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 168, 255, 0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .element.active .glow {
+            background: radial-gradient(circle at center, rgba(255, 204, 0, 0.3) 0%, transparent 70%);
+            opacity: 1;
+        }
+        
+        .element-index {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="wallpaper"></canvas>
+    
+    <div class="elements-container">
+        <div class="element" data-original="D" data-transform="Z" data-name="Dionium" data-name-transform="Zephyrium" data-original-number="24.125" data-transform-number="26.98" data-index="119" data-transform-index="120">
+            <div class="element-index">119</div>
+            <div class="element-symbol">D</div>
+            <div class="element-name">Dionium</div>
+            <div class="element-number">24.125</div>
+            <div class="glow"></div>
+        </div>
+        <div class="element" data-original="I" data-transform="I" data-name="Iodine" data-name-transform="Infinium" data-original-number="126.9" data-transform-number="113.928" data-index="53" data-transform-index="121">
+            <div class="element-index">53</div>
+            <div class="element-symbol">I</div>
+            <div class="element-name">Iodine</div>
+            <div class="element-number">126.9</div>
+            <div class="glow"></div>
+        </div>
+        <div class="element" data-original="O" data-transform="A" data-name="Oxygen" data-name-transform="Aetherium" data-original-number="15.999" data-transform-number="26.035" data-index="8" data-transform-index="122">
+            <div class="element-index">8</div>
+            <div class="element-symbol">O</div>
+            <div class="element-name">Oxygen</div>
+            <div class="element-number">15.999</div>
+            <div class="glow"></div>
+        </div>
+        <div class="element" data-original="N" data-transform="A" data-name="Nitrogen" data-name-transform="Adamantium" data-original-number="14.007" data-transform-number="376.099" data-index="7" data-transform-index="123">
+            <div class="element-index">7</div>
+            <div class="element-symbol">N</div>
+            <div class="element-name">Nitrogen</div>
+            <div class="element-number">14.007</div>
+            <div class="glow"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wallpaper');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas to full window size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Particle array
+        const particles = [];
+        const particleCount = 200;
+        
+        // Particle colors with blue tones
+        const colors = ['#00a8ff', '#0097e6', '#0077b6', '#00d2d3', '#00b4d8'];
+        
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 4 + 1,
+                speedX: Math.random() * 2 - 1,
+                speedY: Math.random() * 2 - 1,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                opacity: Math.random() * 0.6 + 0.4
+            });
+        }
+        
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw subtle grid
+            ctx.strokeStyle = 'rgba(0, 168, 255, 0.05)';
+            ctx.lineWidth = 1;
+            
+            const gridSize = 50;
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw particles
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                
+                // Update position
+                p.x += p.speedX;
+                p.y += p.speedY;
+                
+                // Bounce off edges
+                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.opacity;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                // Draw connections between nearby particles
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const distance = Math.sqrt(
+                        Math.pow(p.x - p2.x, 2) + 
+                        Math.pow(p.y - p2.y, 2)
+                    );
+                    
+                    if (distance < 120) {
+                        ctx.beginPath();
+
+                        const dynamicOpacity = 0.3 + (1 - distance/120)*0.7;
+                        const dynamicHue = document.body.classList.contains('golden-background')
+                          ? 45 + Math.sin(Date.now()*0.001)*15 // Kuning bergoyang
+                          : 200 + (distance/120 * 100); // Biru ke ungu
+
+                        ctx.strokeStyle = `hsla(${dynamicHue}, 100%, 60%, ${dynamicOpacity})`;
+                        ctx.lineWidth = 0.5 + (1 - distance/120)*1.5;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // Element click interaction
+        const elements = document.querySelectorAll('.element');
+        elements.forEach(element => {
+            element.addEventListener('click', function() {
+                const isActive = this.classList.toggle('active');
+                const symbolElement = this.querySelector('.element-symbol');
+                const original = this.getAttribute('data-original');
+                const transform = this.getAttribute('data-transform');
+                
+                const nameElement = this.querySelector('.element-name');
+                const indexElement = this.querySelector('.element-index');
+                const number_Element = this.querySelector('.element-number');
+                const original_name = this.getAttribute('data-name');
+                const transform_name = this.getAttribute('data-name-transform');
+                const original_index = this.getAttribute('data-index');
+                const transform_index = this.getAttribute('data-transform-index');
+                const original_number = this.getAttribute('data-original-number');
+                const transform_number = this.getAttribute('data-transform-number');
+                
+                // Toggle between original and transformed symbol
+                symbolElement.textContent = isActive ? transform : original;
+                nameElement.textContent = isActive ? transform_name : original_name;
+                indexElement.textContent = isActive ? transform_index : original_index;
+                number_Element.textContent = isActive ? transform_number : original_number;
+                
+                // Create ripple effect
+                const ripple = document.createElement('div');
+                ripple.style.position = 'absolute';
+                ripple.style.width = '10px';
+                ripple.style.height = '10px';
+                ripple.style.backgroundColor = isActive 
+                    ? 'rgba(255, 204, 0, 0.5)' 
+                    : 'rgba(0, 168, 255, 0.5)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.transform = 'translate(-50%, -50%)';
+                
+                // Position at click location (approximate center)
+                ripple.style.left = '50%';
+                ripple.style.top = '50%';
+                
+                this.appendChild(ripple);
+                
+                // Animate ripple
+                const duration = 800;
+                const startTime = performance.now();
+                
+                function animateRipple(timestamp) {
+                    const elapsed = timestamp - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    const scale = 1 + progress * 15;
+                    const opacity = 1 - progress;
+                    
+                    ripple.style.transform = `translate(-50%, -50%) scale(${scale})`;
+                    ripple.style.opacity = opacity;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animateRipple);
+                    } else {
+                        ripple.remove();
+                    }
+                }
+                
+                requestAnimationFrame(animateRipple);
+            });
+        });
+
+        // 1. Variabel untuk melacak status semua element
+        const elementStatus = {
+            'D': false,
+            'I': false,
+            'O': false,
+            'N': false
+        };
+
+        // 2. Fungsi untuk memeriksa apakah semua element aktif
+        function checkAllActive() {
+            const allActive = Object.values(elementStatus).every(status => status);
+            const body = document.body;
+
+            if (allActive) {
+                body.classList.add('golden-background');
+                // Tambahkan efek partikel emas
+                changeParticlesToGold();
+            } else {
+                body.classList.remove('golden-background');
+                // Kembalikan partikel ke warna semula
+                resetParticlesColor();
+            }
+        }
+
+        // 3. Fungsi untuk mengubah warna partikel menjadi emas
+        function changeParticlesToGold() {
+            const goldenColors = ['#FFD700', '#FFDF00', '#FFcc00', '#F5D76E'];
+            particles.forEach(p => {
+                p.color = goldenColors[Math.floor(Math.random() * goldenColors.length)];
+            });
+        }
+
+        // 4. Fungsi untuk mengembalikan warna partikel ke biru
+        function resetParticlesColor() {
+            const blueColors = ['#00a8ff', '#0097e6', '#0077b6', '#00d2d3', '#00b4d8'];
+            particles.forEach(p => {
+                p.color = blueColors[Math.floor(Math.random() * blueColors.length)];
+            });
+        }
+
+        // 5. Modifikasi event listener click untuk update status
+        elements.forEach(element => {
+            element.addEventListener('click', function() {
+                // ... kode existing ...
+
+                // Update status element
+                const symbol = this.getAttribute('data-original');
+                elementStatus[symbol] = !elementStatus[symbol];
+
+                // Periksa apakah semua aktif
+                checkAllActive();
+            });
+        });
+        
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
